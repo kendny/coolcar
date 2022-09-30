@@ -5,4 +5,5 @@ interface IAppOption {
     userInfo?: WechatMiniprogram.UserInfo,
   }
   userInfoReadyCallback?: WechatMiniprogram.GetUserInfoSuccessCallback,
+  resolveUserInfo(userInfo: WechatMiniprogram.UserInfo): void;
 }

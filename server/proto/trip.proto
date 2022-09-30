@@ -21,8 +21,8 @@ message Location{
 message Trip{
     string start = 1; // 1:第一个字段
     string end = 2; // 2:第二个字段
-    int32 duration_sec = 3;
-    int32 fee_cent = 4; // sec, cent 单位
+    int32 duration_sec = 3; //第3个字段 sec 单位，秒
+    int32 fee_cent = 4; // cent 单位， 分
 
     Location start_pos = 5;
     Location end_pos = 6;
