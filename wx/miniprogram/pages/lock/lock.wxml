@@ -9,7 +9,8 @@
     </view>
 
     <view class="avatar-container">
-        <button wx:if="{{!avatarURL}}" class="cu-avatar round lg bg-grey margin-xs" open-type="getUserInfo" bindgetuserinfo="onGetUserInfo">
+        <button wx:if="{{!avatarURL}}" class="cu-avatar round lg bg-grey margin-xs"
+         open-type="getUserInfo" bindgetuserinfo="onGetUserInfo">
             <text class="cuIcon-people"></text>
         </button>
        <view wx:if="{{avatarURL}}" class="switch-container">

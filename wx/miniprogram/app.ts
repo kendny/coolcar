@@ -2,7 +2,7 @@
  * @Author: kendny wh_kendny@163.com
  * @Date: 2022-06-02 08:29:18
  * @LastEditors: kendny wh_kendny@163.com
- * @LastEditTime: 2022-06-29 20:11:32
+ * @LastEditTime: 2022-10-09 23:16:31
  * @FilePath: /coolcar/wx/miniprogram/app.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -21,6 +21,16 @@ App<IAppOption>({
     })
   },
   async onLaunch() {
+    // 发请求，获取数据
+    // wx.request({
+    //   url: "http://127.0.0.1:8080/trip/123",
+    //   method: "GET",
+    //   success: res => {
+    //     console.log(res)
+    //   },
+    //   fail: console.error
+    // })
+
     // 登录
     // Coolcar.login()
 
@@ -34,7 +44,9 @@ App<IAppOption>({
     } catch (err) {
       rejectUserInfo(err)
     }
+    
   },
+  
   resolveUserInfo(userInfo: WechatMiniprogram.UserInfo) {
     resolveUserInfo(userInfo)
   }

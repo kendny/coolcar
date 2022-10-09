@@ -2,7 +2,7 @@
  * @Author: kendny wh_kendny@163.com
  * @Date: 2022-06-19 16:09:43
  * @LastEditors: kendny wh_kendny@163.com
- * @LastEditTime: 2022-06-21 13:46:26
+ * @LastEditTime: 2022-09-30 22:57:14
  * @FilePath: /wx/Users/xxxian/go_project/src/coolcar/server/main.go
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -23,10 +23,11 @@ import (
 )
 
 func startGRPCGateway() {
-	c := context.Background()
-	c, cancel := context.WithCancel(c)
-	defer cancel()
+	c := context.Background()          // 生成上下文
+	c, cancel := context.WithCancel(c) // 上下文有cancel的能力
+	defer cancel()                     // 结束后 cancel
 
+	// 获取分发器，一对多
 	mux := runtime.NewServeMux(runtime.WithMarshalerOption(
 		runtime.MIMEWildcard, &runtime.JSONPb{
 			MarshalOptions: protojson.MarshalOptions{
@@ -66,6 +67,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
+	// 注册服务
 	trippb.RegisterTripServiceServer(s, &trip.Service{})
 	log.Fatal(s.Serve(lis))
 }
