@@ -2,6 +2,7 @@
 
 *.out
 .vscode
+.DS_Store
 
 wx/miniprogram/**/*.js
-*/node_modules/*
+wx/node_modules/**/*
