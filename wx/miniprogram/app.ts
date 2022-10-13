@@ -16,6 +16,7 @@ let rejectUserInfo: (reason?: any) => void
 App<IAppOption>({
   globalData: {
     userInfo: new Promise((resolve, reject) => {
+      // 将Promise 里面的resolve 保存到 resolveUserInfo
       resolveUserInfo = resolve // 等价 res => resolve(res)
       rejectUserInfo = reject  // 等价 error => reject(error)
     })
@@ -39,6 +40,7 @@ App<IAppOption>({
       const setting = await getSetting()
       if (setting.authSetting['scope.userInfo']) {
         const userInfoRes = await getUserInfo()
+        // 通知页面获取用户信息
         resolveUserInfo(userInfoRes.userInfo)
       }
     } catch (err) {
@@ -46,7 +48,8 @@ App<IAppOption>({
     }
     
   },
-  
+
+  // 其它页面通过这个调用获取信息 app.resolveUserInfo
   resolveUserInfo(userInfo: WechatMiniprogram.UserInfo) {
     resolveUserInfo(userInfo)
   }

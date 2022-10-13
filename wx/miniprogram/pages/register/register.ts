@@ -7,6 +7,8 @@
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 // pages/register/register.ts
+import {routing} from "../../utils/routings";
+
 Page({
 
   /**
@@ -25,8 +27,9 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad() {
-
+  onLoad(opt:Record<'redirect', string>) {
+    const o:routing.RegisterOpts = opt
+    console.log(o, o.redirect)
   },
 
 

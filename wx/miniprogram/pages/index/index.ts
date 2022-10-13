@@ -48,17 +48,19 @@ Page({
     scale: 16,
     markers: [] as Marker[],
   },
-  // 事件处理函数
-  bindViewTap() {
-    wx.navigateTo({
-      url: '../logs/logs',
-    })
-  },
+
   async onLoad() {
-    const userInfo = await getApp<IAppOption>().globalData.userInfo
-    this.setData({
-       // @ts-ignore
-      avatarURL: userInfo.avatarUrl,
+    // const userInfo:WechatMiniprogram.UserInfo = await getApp<IAppOption>().globalData.userInfo
+    // this.setData({
+    //    // @ts-ignore
+    //   avatarURL: userInfo.avatarUrl,
+    // })
+    app.globalData.userInfo.then(userInfo =>{
+      this.setData({
+        userInfo,
+        // hasUserInfo:true
+      })
+      console.log('userInfo:===', userInfo)
     })
 
      // @ts-ignore
@@ -105,6 +107,18 @@ Page({
         })
       },
       fail: console.error,
+    })
+  },
+  // 事件处理函数
+  bindViewTap() {
+    wx.navigateTo({
+      url: '../logs/logs',
+    })
+  },
+  onMyTripsTap(){
+    // 查看个人行程
+    wx.navigateTo({
+      url:"/pages/mytrips/mytrips"
     })
   },
   onMyLocationTap() {
@@ -172,10 +186,14 @@ Page({
   },
   getUserInfo(e: any) {
     // 不推荐使用getUserInfo获取用户信息，预计自2021年4月13日起，getUserInfo将不再弹出弹窗，并直接返回匿名的用户个人信息
+    // e 为any 类型，后面所获取的值的类型将不受到保护，解决方法，如果能确定所获取值的类型，则可以手动限定类型
+    const userInfo:WechatMiniprogram.UserInfo = e.detail.userInfo;
+    // app.globalData.userInfo = userInfo;
+    app.resolveUserInfo(userInfo)
     console.log(e)
-    this.setData({
-      userInfo: e.detail.userInfo,
-      hasUserInfo: true
-    })
+    // this.setData({
+    //   userInfo: userInfo,
+    //   hasUserInfo: true
+    // })
   }
 })

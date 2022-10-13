@@ -11,8 +11,7 @@ markers="{{markers}}"
 >
   <cover-view class="icon-container" scroll-top="0">
 
-    <cover-image class="round" wx:if="{{!avatarURL}}"  src="/resources/account.png"></cover-image>
-    <cover-image class="round" wx:if="{{avatarURL}}"  src="{{avatarURL}}"></cover-image>
+    <cover-image class="round" bindtap="onMyTripsTap" src="{{avatarURL?avatarURL: '/resources/account.png'}}"></cover-image>
 
     <cover-image src="/resources/my_location.png"
     bindtap="onMyLocationTap"></cover-image>
