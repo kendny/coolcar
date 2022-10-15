@@ -9,6 +9,7 @@
 // app.ts
 
 import { getSetting, getUserInfo } from "./utils/wxapi"
+import {IAppOption} from "./appoption";
 let resolveUserInfo: (value: WechatMiniprogram.UserInfo | PromiseLike<WechatMiniprogram.UserInfo>) => void
 let rejectUserInfo: (reason?: any) => void
 
@@ -23,14 +24,14 @@ App<IAppOption>({
   },
   async onLaunch() {
     // 发请求，获取数据
-    // wx.request({
-    //   url: "http://127.0.0.1:8080/trip/123",
-    //   method: "GET",
-    //   success: res => {
-    //     console.log(res)
-    //   },
-    //   fail: console.error
-    // })
+    wx.request({
+      url: "http://127.0.0.1:8080/trip/123",
+      method: "GET",
+      success: res => {
+        console.log(res)
+      },
+      fail: console.error
+    })
 
     // 登录
     // Coolcar.login()

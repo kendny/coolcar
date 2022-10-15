@@ -9,6 +9,7 @@
 // pages/lock/lock.ts
 
 import {routing} from "../../utils/routings";
+import {IAppOption} from "../../appoption";
 
 const shareLocationKey = "share_location"
 

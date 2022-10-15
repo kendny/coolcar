@@ -8,6 +8,8 @@
  */
 // index.ts
 // 获取应用实例
+import {IAppOption} from "../../appoption";
+
 const app = getApp<IAppOption>()
 interface Marker {
   iconPath: string
@@ -17,7 +19,7 @@ interface Marker {
   width: number
   height: number
 }
-const defaultAvatar = '/resources/car.png'
+// const defaultAvatar = '/resources/car.png'
 const initialLat = 29.761267625855936
 const initialLng = 121.87264654736123
 
