@@ -8,6 +8,13 @@
   "compileType": "miniprogram",
   "projectname": "ts-less-demo",
   "setting": {
+    "packNpmManually": true,
+    "packNpmRelationList": [
+      {
+        "packageJsonPath": "./package.json",
+        "miniprogramNpmDistDir": "../miniprogram/"
+      }
+    ],
     "useCompilerPlugins": [
       "typescript",
       "less"
@@ -17,7 +24,8 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "ignoreUploadUnusedFiles": true,
+    "ignoreUploadUnusedFiles": false,
+    "ignoreDevUnusedFiles": false,
     "es6": true,
     "enhance": true,
     "postcss": true,

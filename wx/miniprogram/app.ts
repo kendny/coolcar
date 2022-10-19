@@ -10,6 +10,8 @@
 
 import { getSetting, getUserInfo } from "./utils/wxapi"
 import {IAppOption} from "./appoption";
+import {coolcar} from "./service/proto_gen/trip_pb";
+import camelcaseKeys from "camelcase-keys";
 let resolveUserInfo: (value: WechatMiniprogram.UserInfo | PromiseLike<WechatMiniprogram.UserInfo>) => void
 let rejectUserInfo: (reason?: any) => void
 
@@ -29,6 +31,14 @@ App<IAppOption>({
       method: "GET",
       success: res => {
         console.log(res)
+        const getTripRes = coolcar.GetTripResponse.fromObject(
+            camelcaseKeys(res.data as object, {
+              deep: true
+            })
+        )
+        console.log(getTripRes)
+        // !:表示 status 一定有值
+        console.log("status is:==", coolcar.TripStatus[getTripRes.trip?.status!])
       },
       fail: console.error
     })
@@ -47,7 +57,7 @@ App<IAppOption>({
     } catch (err) {
       rejectUserInfo(err)
     }
-    
+
   },
 
   // 其它页面通过这个调用获取信息 app.resolveUserInfo
