@@ -10,8 +10,9 @@ package main
 
 import (
 	"context"
-	trippb "coolcar/server/proto/gen/go"
-	trip "coolcar/server/tripservice"
+	trippb "coolcar/server/demo/proto/gen/go"
+	trip "coolcar/server/demo/tripservice"
+	"google.golang.org/protobuf/encoding/protojson"
 	"log"
 	"net"
 	"net/http"
@@ -19,7 +20,6 @@ import (
 	// "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func startGRPCGateway() {
@@ -31,8 +31,8 @@ func startGRPCGateway() {
 	mux := runtime.NewServeMux(runtime.WithMarshalerOption(
 		runtime.MIMEWildcard, &runtime.JSONPb{
 			MarshalOptions: protojson.MarshalOptions{
-				UseEnumNumbers: true,
-				UseProtoNames:  true,
+				UseEnumNumbers: true, // 将枚举类型生成数值， EnumsAsInts -> MarshalOptions.UseEnumNumbers
+				UseProtoNames:  true, // 是否驼峰命名， OrigName -> MarshalOptions.UseProtoNames false：驼峰，true：下划线
 			},
 			UnmarshalOptions: protojson.UnmarshalOptions{
 				DiscardUnknown: true,

@@ -10,7 +10,7 @@ package trip
 
 import (
 	"context"
-	trippb "coolcar/server/proto/gen/go"
+	trippb "coolcar/server/demo/proto/gen/go"
 )
 
 // Service implements trip service

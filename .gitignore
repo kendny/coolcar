@@ -4,5 +4,9 @@
 .vscode
 .DS_Store
 
-wx/miniprogram/**/*.js
-wx/node_modules/**/*
+**/wx/miniprogram/**/*.js
+# 这个JS需要
+!**/wx/miniprogram/service/proto_gen/**/*.js
+
+node_modules
+miniprogram_npm

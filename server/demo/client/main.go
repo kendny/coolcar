@@ -10,11 +10,10 @@ package main
 
 import (
 	"context"
-	trippb "coolcar/server/proto/gen/go"
+	trippb "coolcar/server/demo/proto/gen/go"
 	"fmt"
-	"log"
-
 	"google.golang.org/grpc"
+	"log"
 )
 
 func main() {

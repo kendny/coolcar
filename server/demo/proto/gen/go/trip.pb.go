@@ -140,7 +140,7 @@ type Trip struct {
 	Start          string      `protobuf:"bytes,1,opt,name=start,proto3" json:"start,omitempty"`                                 // 1:第一个字段
 	End            string      `protobuf:"bytes,2,opt,name=end,proto3" json:"end,omitempty"`                                     // 2:第二个字段
 	DurationSec    int32       `protobuf:"varint,3,opt,name=duration_sec,json=durationSec,proto3" json:"duration_sec,omitempty"` //第3个字段 sec 单位，秒
-	FeeCent        int32       `protobuf:"varint,4,opt,name=fee_cent,json=feeCent,proto3" json:"fee_cent,omitempty"`             // cent 单位， 分
+	FeeCent        int32       `protobuf:"varint,4,opt,name=fee_cent,json=feeCent,proto3" json:"fee_cent,omitempty"`             // cent 单位， 分 // 如果是int64 反给前端的是字符串(原因：64范围JS超限)
 	StartPos       *Location   `protobuf:"bytes,5,opt,name=start_pos,json=startPos,proto3" json:"start_pos,omitempty"`
 	EndPos         *Location   `protobuf:"bytes,6,opt,name=end_pos,json=endPos,proto3" json:"end_pos,omitempty"`
 	PathLocationns []*Location `protobuf:"bytes,7,rep,name=path_locationns,json=pathLocationns,proto3" json:"path_locationns,omitempty"`
