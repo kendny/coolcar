@@ -10,8 +10,9 @@
 
 import { getSetting, getUserInfo } from "./utils/wxapi"
 import {IAppOption} from "./appoption";
-import {coolcar} from "./service/proto_gen/trip_pb";
+// import {coolcar} from "./service/proto_gen/demo/trip_pb";
 import camelcaseKeys from "camelcase-keys";
+import {auth} from "./service/proto_gen/auth/auth_pb";
 let resolveUserInfo: (value: WechatMiniprogram.UserInfo | PromiseLike<WechatMiniprogram.UserInfo>) => void
 let rejectUserInfo: (reason?: any) => void
 
@@ -26,25 +27,43 @@ App<IAppOption>({
   },
   async onLaunch() {
     // 发请求，获取数据
-    wx.request({
-      url: "http://127.0.0.1:8080/trip/123",
-      method: "GET",
-      success: res => {
-        console.log(res)
-        const getTripRes = coolcar.GetTripResponse.fromObject(
-            camelcaseKeys(res.data as object, {
-              deep: true
-            })
-        )
-        console.log(getTripRes)
-        // !:表示 status 一定有值
-        console.log("status is:==", coolcar.TripStatus[getTripRes.trip?.status!])
-      },
-      fail: console.error
-    })
+    // wx.request({
+    //   url: "http://127.0.0.1:8080/trip/123",
+    //   method: "GET",
+    //   success: res => {
+    //     console.log(res)
+    //     const getTripRes = coolcar.GetTripResponse.fromObject(
+    //         camelcaseKeys(res.data as object, {
+    //           deep: true
+    //         })
+    //     )
+    //     console.log(getTripRes)
+    //     // !:表示 status 一定有值
+    //     console.log("status is:==", coolcar.TripStatus[getTripRes.trip?.status!])
+    //   },
+    //   fail: console.error
+    // })
 
     // 登录
-    // Coolcar.login()
+    wx.login({
+      success: res => {
+        console.log(res.code)
+        wx.request({
+          url: "http://localhost:8080/v1/auth/login",
+          method: "POST",
+          data:{
+            code:res.code
+          } as auth.v1.ILoginRequest,
+          success: res=>{
+            const loginResp:auth.v1.ILoginResponse = auth.v1.LoginResponse.fromObject(
+                camelcaseKeys(res.data as object)
+            )
+            console.log(loginResp)
+          },
+          fail: console.error
+        })
+      }
+    })
 
     // 获取用户信息
     try {

@@ -20,6 +20,22 @@ mux := runtime.NewServeMux(runtime.WithMarshalerOption(
 ```
 参考： https://git.imooc.com/class-108/coolcar/pulls/1
 
+https://github.com/grpc/grpc/releases/tag/
+https://github.com/storyicon/powerproto
+
+###  as some methods are missing: mustEmbedUnimplementedAuthServiceServer()
+解决方案：
+protoc版本上的变动和机制的改变导致了这个问题
+1.protoc加一个flag（require_unimplemented_servers=false）就可以了：
+protoc -I$GOPATH/src -I.
+--go-grpc_out=require_unimplemented_servers=false:$GOPATH/src *.proto
+2.具体信息参照https://github.com/grpc/grpc-go/blob/master/cmd/protoc-gen-go-grpc/README.md
+
+为啥加？
+```shell
+--go-grpc_out=require_unimplemented_servers=false:$GO_OUT_PATH
+```
+
 
 ### 编译 ts
 在packpage.json中添加 编译 命令
