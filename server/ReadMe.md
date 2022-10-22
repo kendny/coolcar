@@ -50,3 +50,10 @@ protoc -I$GOPATH/src -I.
 npm run tsc
 ```
 
+### go 操作MongoDB 报错原因
+```shell
+panic: error decoding key _id: an ObjectID string must be exactly 12 bytes long (got 5)
+```
+> ```当然该数据库中还有其他数据，因为ObjectID的原因，程序panic了```
+参考：https://learnku.com/articles/66231
+
