@@ -57,3 +57,17 @@ panic: error decoding key _id: an ObjectID string must be exactly 12 bytes long 
 > ```当然该数据库中还有其他数据，因为ObjectID的原因，程序panic了```
 参考：https://learnku.com/articles/66231
 
+
+#### mongo 测试用例报错
+```shell
+panic: the provided hex string is not a valid ObjectID [recovered]
+	panic: the provided hex string is not a valid ObjectID
+```
+解决：
+mongo的主键ID mgo.IDField：长度不对导致的 
+```shell
+bson.M{
+			mgo.IDField: mustObjID("5f7c245ab0361e00ffb9fd6f11"), // 会报错长度应该是 5f7c245ab0361e00ffb9fd6f
+			openIDField: "openid_1",
+		},
+```

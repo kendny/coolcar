@@ -2,27 +2,100 @@ package dao
 
 import (
 	"context"
+	mgo "coolcar/server/share/mongo"
+	mongotesting "coolcar/server/share/testing"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"os"
 	"testing"
 )
 
+var mongoURI string
+
 func TestResolveAccountID(t *testing.T) {
 	c := context.Background()
-	mc, err := mongo.Connect(c, options.Client().ApplyURI("mongodb://127.0.0.1:27017/?readPreference=primary&ssl=false&directConnection=true"))
-
+	//"mongodb://127.0.0.1:27017/?readPreference=primary&ssl=false&directConnection=true"
+	mc, err := mongo.Connect(c, options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		t.Fatalf("cannt connect mongodb: %v\n", err)
 	}
 
 	m := NewMongo(mc.Database("coolcar"))
-	id, err := m.ResolveAccountID(c, "aaaa")
+	// 构造多个测试实例
+	_, err = m.col.InsertMany(c, []interface{}{
+		bson.M{
+			mgo.IDField: mustObjID("5f7c245ab0361e00ffb9fd6f"),
+			openIDField: "openid_1",
+		},
+		bson.M{
+			mgo.IDField: mustObjID("5f7c245ab0361e00ffb9fd70"),
+			openIDField: "openid_2",
+		},
+	})
 	if err != nil {
-		t.Errorf("faild resolve account id for aaaa: %v\n", err)
-	} else {
-		want := "6352921b22327fd5955ae001"
-		if id != want {
-			t.Errorf("resolve account id: want:%q, got:%q\n", want, id)
-		}
+		t.Fatalf("cannot insert initial values: %v\n", err)
 	}
+	// 生成固定ID
+	m.newObjID = func() primitive.ObjectID {
+		return mustObjID("6352921b22327fd5955ae001")
+	}
+
+	//表格驱动测试
+	cases := []struct {
+		name   string
+		openID string
+		want   string
+	}{
+		{
+			name:   "existing_user",
+			openID: "openid_1",
+			want:   "5f7c245ab0361e00ffb9fd6f",
+		}, {
+			name:   "another_existing_user",
+			openID: "openid_2",
+			want:   "5f7c245ab0361e00ffb9fd70",
+		}, {
+			name:   "new_user",
+			openID: "openid_3",
+			want:   "6352921b22327fd5955ae001",
+		},
+	}
+
+	for i, cc := range cases {
+		t.Run(cc.name, func(t *testing.T) {
+			id, err := m.ResolveAccountID(context.Background(), cc.openID)
+			fmt.Printf("i: %v, c: %v, id: %v, %v\n", i, cc, id, err)
+			if err != nil {
+				t.Errorf("failed resolve account id for %q:%v\n", cc.openID, err)
+			}
+			if id != cc.want {
+				t.Errorf("resolve account id: want:%q, got:%q\n", cc.want, id)
+			}
+		})
+	}
+
+	//id, err := m.ResolveAccountID(c, "aaaa")
+	//if err != nil {
+	//	t.Errorf("faild resolve account id for aaaa: %v\n", err)
+	//} else {
+	//	want := "6352921b22327fd5955ae001"
+	//	if id != want {
+	//		t.Errorf("resolve account id: want:%q, got:%q\n", want, id)
+	//	}
+	//}
+}
+
+func mustObjID(hex string) primitive.ObjectID {
+	objID, err := primitive.ObjectIDFromHex(hex)
+	if err != nil {
+		panic(err)
+	}
+	return objID
+}
+
+func TestMain(m *testing.M) {
+	os.Exit(mongotesting.RunWithMongoInDocker(m, &mongoURI)) // 确保测试每次在新的docker环境中运行
 }

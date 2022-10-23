@@ -21,3 +21,10 @@ func Set(v interface{}) bson.M {
 		"$set": v,
 	}
 }
+
+// SetOnInsert 不存在就插入并返回，存在直接查询返回
+func SetOnInsert(v interface{}) bson.M {
+	return bson.M{
+		"$setOnInsert": v,
+	}
+}
