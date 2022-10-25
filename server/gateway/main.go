@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	authpb "coolcar/server/auth/api/gen/v1"
+	rentalpb "coolcar/server/rental/api/gen/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -34,7 +35,17 @@ func main() {
 		[]grpc.DialOption{grpc.WithInsecure()})
 
 	if err != nil {
-		log.Fatalf("cannot start grpc gateway:%v", err)
+		log.Fatalf("cannot register auth service in grpc gateway:%v", err)
+	}
+
+	// 注册
+	err = rentalpb.RegisterTripServiceHandlerFromEndpoint(c,
+		mux, // mux:multiplexer
+		"localhost:8082",
+		[]grpc.DialOption{grpc.WithInsecure()})
+
+	if err != nil {
+		log.Fatalf("cannot register trip service in grpc gateway:%v", err)
 	}
 
 	err = http.ListenAndServe(":8080", mux)

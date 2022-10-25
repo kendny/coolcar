@@ -12,11 +12,12 @@ import (
 
 // Service implements auth service
 type Service struct {
-	OpenIDResolver OpenIDResolver
-	Mongo          *dao.Mongo
-	TokenGenerator TokenGenerator
-	TokenExpire    time.Duration
-	Logger         *zap.Logger // 服务类型一般都用指针
+	OpenIDResolver                        OpenIDResolver
+	Mongo                                 *dao.Mongo
+	TokenGenerator                        TokenGenerator
+	TokenExpire                           time.Duration
+	Logger                                *zap.Logger // 服务类型一般都用指针
+	authpb.UnimplementedAuthServiceServer             // 必须引用，不然报错
 }
 
 // OpenIDResolver resolves an authorization code to an open id.

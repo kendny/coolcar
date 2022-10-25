@@ -43,19 +43,21 @@ func (c *tripServiceClient) CreateTrip(ctx context.Context, in *CreateTripReques
 }
 
 // TripServiceServer is the server API for TripService service.
-// All implementations should embed UnimplementedTripServiceServer
+// All implementations must embed UnimplementedTripServiceServer
 // for forward compatibility
 type TripServiceServer interface {
 	CreateTrip(context.Context, *CreateTripRequest) (*CreateTripResponse, error)
+	mustEmbedUnimplementedTripServiceServer()
 }
 
-// UnimplementedTripServiceServer should be embedded to have forward compatible implementations.
+// UnimplementedTripServiceServer must be embedded to have forward compatible implementations.
 type UnimplementedTripServiceServer struct {
 }
 
 func (UnimplementedTripServiceServer) CreateTrip(context.Context, *CreateTripRequest) (*CreateTripResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTrip not implemented")
 }
+func (UnimplementedTripServiceServer) mustEmbedUnimplementedTripServiceServer() {}
 
 // UnsafeTripServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to TripServiceServer will

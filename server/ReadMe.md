@@ -36,6 +36,19 @@ protoc -I$GOPATH/src -I.
 --go-grpc_out=require_unimplemented_servers=false:$GO_OUT_PATH
 ```
 
+3. 定义service时加 UnimplementedAuthServiceServer
+   //所有实现必须嵌入UnimplementedTripServiceServer
+   //向前兼容
+```shell
+type Service struct {
+	OpenIDResolver                        OpenIDResolver
+	Mongo                                 *dao.Mongo
+	TokenGenerator                        TokenGenerator
+	TokenExpire                           time.Duration
+	Logger                                *zap.Logger // 服务类型一般都用指针
+	authpb.UnimplementedAuthServiceServer             // 必须引用，不然报错
+}
+```
 
 ### 编译 ts
 在packpage.json中添加 编译 命令
