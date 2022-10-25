@@ -13,6 +13,7 @@ import {IAppOption} from "./appoption";
 // import {coolcar} from "./service/proto_gen/demo/trip_pb";
 import camelcaseKeys from "camelcase-keys";
 import {auth} from "./service/proto_gen/auth/auth_pb";
+import {rental} from "./service/proto_gen/rental/rental_pb";
 let resolveUserInfo: (value: WechatMiniprogram.UserInfo | PromiseLike<WechatMiniprogram.UserInfo>) => void
 let rejectUserInfo: (reason?: any) => void
 
@@ -58,6 +59,18 @@ App<IAppOption>({
             const loginResp:auth.v1.ILoginResponse = auth.v1.LoginResponse.fromObject(
                 camelcaseKeys(res.data as object)
             )
+
+            wx.request({
+              url: "http://localhost:8080/v1/trip",
+              method: "POST",
+              data:{
+                start: "abc",
+              } as rental.v1.ICreateTripRequest,
+              header:{
+                authorization: "Bearer " + loginResp.accessToken
+              },
+              success: console.log,
+            })
             console.log(loginResp)
           },
           fail: console.error

@@ -38,8 +38,8 @@ func main() {
 		logger.Fatal("cannot connect mongodb", zap.Error(err))
 	}
 
-	// 读取公钥
-	pkFile, err := os.Open("auth/private.key")
+	// 读取密钥
+	pkFile, err := os.Open("./private.key")
 	if err != nil {
 		logger.Fatal("cannot open private", zap.Error(err))
 	}

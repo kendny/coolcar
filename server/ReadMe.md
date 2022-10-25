@@ -84,3 +84,22 @@ bson.M{
 			openIDField: "openid_1",
 		},
 ```
+
+### --grpc-gateway_out: must not set request body when http method is GET: CreateTrip
+```shell
+http:
+    rules:
+    - selector: rental.v1.TripService.CreateTrip
+      get: /v1/trip
+      body: "*"
+```
+
+### --grpc-gateway_out: failed to parse gRPC API Configuration from YAML in './rental/api/rental.yaml': proto: (line 1:67): error parsing "post", oneof google.api.HttpRule.pattern is already set
+```shell
+http:
+    rules:
+    - selector: rental.v1.TripService.CreateTrip
+      post: /v1/trip
+      get: /v1/trip
+      body: "*"
+```
