@@ -59,7 +59,7 @@ func (m *Mongo) CreateTrip(c context.Context, trip *rentalpb.Trip) (*TripRecord,
 	return r, nil
 }
 
-// GetTrip
+// GetTrip gets a trip.
 func (m *Mongo) GetTrip(c context.Context, id id.TripID, accountID id.AccountID) (*TripRecord, error) {
 	objID, err := objid.FromID(id) //primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -80,4 +80,62 @@ func (m *Mongo) GetTrip(c context.Context, id id.TripID, accountID id.AccountID)
 		return nil, fmt.Errorf("could not decode: %v\n", err)
 	}
 	return &tr, nil
+}
+
+// GetTrips gets trips for the account by status.
+// If status is not specified, gets all trips for the account.
+func (m *Mongo) GetTrips(c context.Context, accountID id.AccountID, status rentalpb.TripStatus) ([]*TripRecord, error) {
+	filter := bson.M{
+		accountIDField: accountID.String(),
+	}
+	if status != rentalpb.TripStatus_TS_NOT_SPECIFIED {
+		filter[statusField] = status
+	}
+
+	res, err := m.col.Find(c, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var trips []*TripRecord
+	for res.Next(c) {
+		var trip TripRecord
+		err := res.Decode(&trip)
+		if err != nil {
+			//return nil, err
+			continue
+		}
+		trips = append(trips, &trip)
+	}
+	return trips, nil
+}
+
+/**
+使用 updatedAt 乐观锁解决同时更新的问题
+**/
+// UpdateTrip updates a trip.
+func (m *Mongo) UpdateTrip(c context.Context, tid id.TripID, aid id.AccountID, updatedAt int64, trip *rentalpb.Trip) error {
+	objID, err := objid.FromID(tid)
+	if err != nil {
+		return fmt.Errorf("invalid id: %v\n", err)
+	}
+
+	newUpdatedAt := mgutil.UpdatedAt()
+	res, err := m.col.UpdateOne(c, bson.M{
+		mgutil.IDFieldName:        objID,
+		accountIDField:            aid.String(),
+		mgutil.UpdatedAtFieldName: updatedAt,
+	}, mgutil.Set(bson.M{
+		tripField:                 trip,
+		mgutil.UpdatedAtFieldName: newUpdatedAt,
+	}))
+	if err != nil {
+		return err
+	}
+
+	// 可能找不到任何文档
+	if res.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+	return nil
 }

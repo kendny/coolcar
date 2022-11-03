@@ -147,6 +147,198 @@ func TestGetTrip(t *testing.T) {
 	}
 }
 
+func TestGetTrips(t *testing.T) {
+	// 建客户端
+	c := context.Background()
+	//"mongodb://127.0.0.1:27017/?readPreference=primary&ssl=false&directConnection=true"
+	mc, err := mongotesting.NewClient(c)
+	if err != nil {
+		t.Fatalf("cannt connect mongodb: %v\n", err)
+	}
+
+	m := NewMongo(mc.Database("coolcar"))
+
+	rows := []struct {
+		id        string
+		accountID string
+		status    rentalpb.TripStatus
+	}{
+		{
+			id:        "5f8132eb10714bf629489051",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_FINISHED,
+		},
+		{
+			id:        "5f8132eb10714bf629489052",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_FINISHED,
+		},
+		{
+			id:        "5f8132eb10714bf629489053",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_FINISHED,
+		},
+		{
+			id:        "5f8132eb10714bf629489054",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_IN_PROGRESS,
+		},
+		{
+			id:        "5f8132eb10714bf629489055",
+			accountID: "account_id_for_get_trips_1",
+			status:    rentalpb.TripStatus_IN_PROGRESS,
+		},
+	}
+
+	for _, r := range rows {
+		mgutil.NewObjIDWithValue(id.TripID(r.id))
+		_, err := m.CreateTrip(c, &rentalpb.Trip{
+			AccountId: r.accountID,
+			Status:    r.status,
+		})
+
+		if err != nil {
+			t.Fatalf("cannot create rows: %v\n", err)
+		}
+	}
+
+	cases := []struct {
+		name       string
+		accountID  string
+		status     rentalpb.TripStatus
+		wantCount  int
+		wantOnlyID string
+	}{
+		{
+			name:      "get_all",
+			accountID: "account_id_for_get_trips",
+			status:    rentalpb.TripStatus_TS_NOT_SPECIFIED,
+			wantCount: 4,
+		},
+		{
+			name:       "get_in_progress",
+			accountID:  "account_id_for_get_trips",
+			status:     rentalpb.TripStatus_IN_PROGRESS,
+			wantCount:  1,
+			wantOnlyID: "5f8132eb10714bf629489054",
+		},
+	}
+
+	for _, cc := range cases {
+		t.Run(cc.name, func(t *testing.T) {
+			res, err := m.GetTrips(context.Background(), id.AccountID(cc.accountID), cc.status)
+			if err != nil {
+				t.Errorf("cannot get trips: %v\n", err)
+			}
+
+			if cc.wantCount != len(res) {
+				t.Errorf("incorrect result count; want %d, got:%d\n", cc.wantCount, len(res))
+			}
+
+			if cc.wantOnlyID != "" && len(res) > 0 {
+				if cc.wantOnlyID != res[0].ID.Hex() {
+					t.Errorf("only_id incorrect; want %q, got:%q\n", cc.wantOnlyID, res[0].ID.Hex())
+				}
+			}
+		})
+	}
+
+}
+
+func TestUpdateTrip(t *testing.T) {
+
+	c := context.Background()
+	//"mongodb://127.0.0.1:27017/?readPreference=primary&ssl=false&directConnection=true"
+	mc, err := mongotesting.NewClient(c)
+	if err != nil {
+		t.Fatalf("cannt connect mongodb: %v\n", err)
+	}
+
+	m := NewMongo(mc.Database("coolcar"))
+
+	//	一条记录两个人同一时刻更改
+	tid := id.TripID("5f8132eb12714bf629489054")
+	aid := id.AccountID("account_for_update")
+
+	// 设定一个固定的时间
+	var now int64 = 10000
+	mgutil.NewObjIDWithValue(tid)
+	mgutil.UpdatedAt = func() int64 {
+		return now
+	}
+	tr, err := m.CreateTrip(c, &rentalpb.Trip{
+		AccountId: aid.String(),
+		Status:    rentalpb.TripStatus_IN_PROGRESS,
+		Start: &rentalpb.LocationStatus{
+			PoiName: "start_poi",
+		},
+	})
+	if err != nil {
+		t.Fatalf("cannot create trip: %v\n", err)
+	}
+	if tr.UpdatedAt != 10000 {
+		t.Fatalf("wrong updatedat; want:10000, got:%d\n", tr.UpdatedAt)
+	}
+
+	//更新的值
+	update := &rentalpb.Trip{
+		AccountId: aid.String(),
+		Status:    rentalpb.TripStatus_IN_PROGRESS,
+		Start: &rentalpb.LocationStatus{
+			PoiName: "start_poi_updated",
+		},
+	}
+
+	cases := []struct {
+		name          string
+		now           int64 // 当前更新的时间
+		withUpdatedAt int64 // 更新记录的时间
+		wantErr       bool
+	}{
+		{
+			name:          "normal_update",
+			now:           20000,
+			withUpdatedAt: 10000,
+		}, {
+			name:          "update_with_stale_timestamp",
+			now:           30000,
+			withUpdatedAt: 10000,
+			wantErr:       true,
+		}, {
+			name:          "update_with_refetch",
+			now:           40000,
+			withUpdatedAt: 20000,
+		},
+	}
+
+	for _, cc := range cases {
+		// 控制时间的走动
+		now = cc.now
+		err := m.UpdateTrip(c, tid, aid, cc.withUpdatedAt, update)
+		if cc.wantErr {
+			if err == nil {
+				t.Errorf("%s: want error; got none", cc.name)
+			} else {
+				// 期待出错，出错了继续
+				continue
+			}
+		} else {
+			if err != nil {
+				t.Errorf("%s:cannot update:%v\n", cc.name, err)
+			}
+		}
+
+		// 校验时间戳
+		updatedTrip, err := m.GetTrip(c, tid, aid)
+		if err != nil {
+			t.Errorf("%s:cannot get trip after update: %v\n", cc.name, err)
+		}
+		if cc.now != updatedTrip.UpdatedAt {
+			t.Errorf("%s: incorrect updatedat: want %d, got %d\n", cc.name, cc.now, updatedTrip.UpdatedAt)
+		}
+	}
+}
+
 func TestMain(m *testing.M) {
 	os.Exit(mongotesting.RunWithMongoInDocker(m)) // 确保测试每次在新的docker环境中运行
 }

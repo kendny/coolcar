@@ -12,8 +12,8 @@ import (
 // 将mongo中的操作进行提取共享
 
 const (
-	IDFieldName        = "_id" // IDFieldName defineds the field name for mongo  document id.
-	UpdatedAtFieldName = "updateat"
+	IDFieldName        = "_id"       // IDFieldName defineds the field name for mongo  document id.
+	UpdatedAtFieldName = "updatedat" // 千万不能写错了，要不出错难排查
 )
 
 // ObjID defines the object id field
