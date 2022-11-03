@@ -4,6 +4,7 @@ import (
 	"context"
 	authpb "coolcar/server/auth/api/gen/v1"
 	rentalpb "coolcar/server/rental/api/gen/v1"
+	"coolcar/server/share/server"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -12,6 +13,11 @@ import (
 )
 
 func main() {
+	lg, err := server.NewZapLogger()
+	if err != nil {
+		log.Fatalf("cannot create zap logger: %v\n", err)
+	}
+
 	c := context.Background()
 	c, cancel := context.WithCancel(c)
 	defer cancel()
@@ -28,28 +34,33 @@ func main() {
 		},
 	))
 
-	// 注册
-	err := authpb.RegisterAuthServiceHandlerFromEndpoint(c,
-		mux, // mux:multiplexer
-		"localhost:8081",
-		[]grpc.DialOption{grpc.WithInsecure()})
-
-	if err != nil {
-		log.Fatalf("cannot register auth service in grpc gateway:%v", err)
+	// grpc gateway 相对独立，不需要共用公共的RunGRPCServer
+	serverConfig := []struct {
+		name         string
+		addr         string
+		registerFunc func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error)
+	}{
+		{
+			name:         "auth",
+			addr:         "127.0.0:8081",
+			registerFunc: authpb.RegisterAuthServiceHandlerFromEndpoint,
+		},
+		{
+			name:         "rental",
+			addr:         "127.0.0:8082",
+			registerFunc: rentalpb.RegisterTripServiceHandlerFromEndpoint,
+		},
 	}
 
-	// 注册
-	err = rentalpb.RegisterTripServiceHandlerFromEndpoint(c,
-		mux, // mux:multiplexer
-		"localhost:8082",
-		[]grpc.DialOption{grpc.WithInsecure()})
-
-	if err != nil {
-		log.Fatalf("cannot register trip service in grpc gateway:%v", err)
+	for _, s := range serverConfig {
+		err := s.registerFunc(c,
+			mux, // mux:multiplexer
+			"localhost:8081",
+			[]grpc.DialOption{grpc.WithInsecure()})
+		if err != nil {
+			lg.Sugar().Fatalf("cannot register service %s:%v\n", s.name, s.addr)
+		}
 	}
 
-	err = http.ListenAndServe(":8080", mux)
-	if err != nil {
-		log.Fatalf("cannot listen and server:%v", err)
-	}
+	lg.Sugar().Fatal(http.ListenAndServe(":8080", mux))
 }

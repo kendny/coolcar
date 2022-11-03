@@ -13,4 +13,9 @@
 2. `npm install`
 3. 打开小程序开发工具，点击编译
 
+### 报异常
+#### request
+
+TS2322: Type 'REQ' is not assignable to type 'string | IAnyObject | ArrayBuffer | undefined'.   Type 'REQ' is not assignable to type 'ArrayBuffer'.
+
 

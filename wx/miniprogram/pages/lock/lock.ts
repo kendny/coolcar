@@ -10,6 +10,7 @@
 
 import {routing} from "../../utils/routings";
 import {IAppOption} from "../../appoption";
+import { TripService } from "../../service/trip"
 
 const shareLocationKey = "share_location"
 
@@ -70,6 +71,11 @@ Page({
           },
           avatarUrl: this.data.shareLocation ? this.data.avatarURL : ''
         })
+        TripService.CreateTrip({
+          start: 'abc',
+        })
+        return
+
         // 模拟开锁跳转页面
         setTimeout(() => {
           wx.redirectTo({

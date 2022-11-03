@@ -80,7 +80,7 @@ panic: the provided hex string is not a valid ObjectID [recovered]
 mongo的主键ID mgo.IDField：长度不对导致的 
 ```shell
 bson.M{
-			mgo.IDField: mustObjID("5f7c245ab0361e00ffb9fd6f11"), // 会报错长度应该是 5f7c245ab0361e00ffb9fd6f
+			mgutil.IDField: mustObjID("5f7c245ab0361e00ffb9fd6f11"), // 会报错长度应该是 5f7c245ab0361e00ffb9fd6f
 			openIDField: "openid_1",
 		},
 ```
@@ -102,4 +102,17 @@ http:
       post: /v1/trip
       get: /v1/trip
       body: "*"
+```
+
+### 如何保证 同一个account最多只能有一个进行中的Trip
+```js
+db.trip.createIndex({
+  "trip.accountid": 1,
+  "trip.status": 1,
+}, {
+  unique: true,
+  partialFilterExpression:{
+    "trip.status": 1, // 指的是值为1
+  }
+})
 ```

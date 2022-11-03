@@ -7,6 +7,7 @@ import (
 	"coolcar/server/auth/dao"
 	"coolcar/server/auth/token"
 	"coolcar/server/auth/wechat"
+	"coolcar/server/share/server"
 	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -14,21 +15,15 @@ import (
 	"google.golang.org/grpc"
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"time"
 )
 
 func main() {
-	logger, err := newZapLogger() //zap.NewDevelopment()
+	logger, err := server.NewZapLogger() //zap.NewDevelopment()
 
 	if err != nil {
 		log.Fatal("cannot create logger: %v", err)
-	}
-
-	lis, err := net.Listen("tcp", ":8081")
-	if err != nil {
-		logger.Fatal("cannot listen ", zap.Error(err))
 	}
 
 	// 数据库操作
@@ -51,20 +46,25 @@ func main() {
 	if err != nil {
 		logger.Fatal("pkBytes parse error", zap.Error(err))
 	}
-	s := grpc.NewServer()
-	authpb.RegisterAuthServiceServer(s, &auth.Service{
-		OpenIDResolver: &wechat.Service{
-			AppID:     "wxd5dda0926308f75e",
-			AppSecret: "b986c1739cb5b8dcc6eb3c1badaf2735",
-			Logger:    logger,
+
+	logger.Sugar().Fatal(server.RunGRPCServer(&server.GRPCConfig{
+		Name:   "auth",
+		Addr:   ":8081",
+		Logger: logger,
+		RegisterFunc: func(s *grpc.Server) {
+			authpb.RegisterAuthServiceServer(s, &auth.Service{
+				OpenIDResolver: &wechat.Service{
+					AppID:     "wxd5dda0926308f75e",
+					AppSecret: "b986c1739cb5b8dcc6eb3c1badaf2735",
+					Logger:    logger,
+				},
+				Mongo:          dao.NewMongo(mongoClient.Database("coolcar")),
+				Logger:         logger,
+				TokenExpire:    2 * time.Hour,
+				TokenGenerator: token.NewJWTTokenGen("coolcar/auth", privKey),
+			})
 		},
-		Mongo:          dao.NewMongo(mongoClient.Database("coolcar")),
-		Logger:         logger,
-		TokenExpire:    2 * time.Hour,
-		TokenGenerator: token.NewJWTTokenGen("coolcar/auth", privKey),
-	})
-	err = s.Serve(lis)
-	logger.Fatal("cannot serve ", zap.Error(err))
+	}))
 }
 
 // 配置日志

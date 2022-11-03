@@ -2,13 +2,13 @@ package dao
 
 import (
 	"context"
-	mgo "coolcar/server/share/mongo"
+	"coolcar/server/share/id"
+	mgutil "coolcar/server/share/mongo"
+	"coolcar/server/share/mongo/objid"
 	mongotesting "coolcar/server/share/testing"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
 	"testing"
 )
@@ -18,7 +18,8 @@ var mongoURI string
 func TestResolveAccountID(t *testing.T) {
 	c := context.Background()
 	//"mongodb://127.0.0.1:27017/?readPreference=primary&ssl=false&directConnection=true"
-	mc, err := mongo.Connect(c, options.Client().ApplyURI(mongoURI))
+	//mc, err := mongo.Connect(c, options.Client().ApplyURI(mongoURI))
+	mc, err := mongotesting.NewDefaultClient(c)
 	if err != nil {
 		t.Fatalf("cannt connect mongodb: %v\n", err)
 	}
@@ -27,19 +28,19 @@ func TestResolveAccountID(t *testing.T) {
 	// 构造多个测试实例
 	_, err = m.col.InsertMany(c, []interface{}{
 		bson.M{
-			mgo.IDField: mustObjID("5f7c245ab0361e00ffb9fd6f"),
-			openIDField: "openid_1",
+			mgutil.IDFieldName: objid.MustFromID(id.AccountID("5f7c245ab0361e00ffb9fd6f")),
+			openIDField:        "openid_1",
 		},
 		bson.M{
-			mgo.IDField: mustObjID("5f7c245ab0361e00ffb9fd70"),
-			openIDField: "openid_2",
+			mgutil.IDFieldName: objid.MustFromID(id.AccountID("5f7c245ab0361e00ffb9fd70")),
+			openIDField:        "openid_2",
 		},
 	})
 	if err != nil {
 		t.Fatalf("cannot insert initial values: %v\n", err)
 	}
 	// 生成固定ID
-	m.newObjID = func() primitive.ObjectID {
+	mgutil.NewObjID = func() primitive.ObjectID {
 		return mustObjID("6352921b22327fd5955ae001")
 	}
 
@@ -71,7 +72,7 @@ func TestResolveAccountID(t *testing.T) {
 			if err != nil {
 				t.Errorf("failed resolve account id for %q:%v\n", cc.openID, err)
 			}
-			if id != cc.want {
+			if id.String() != cc.want {
 				t.Errorf("resolve account id: want:%q, got:%q\n", cc.want, id)
 			}
 		})
@@ -97,5 +98,5 @@ func mustObjID(hex string) primitive.ObjectID {
 }
 
 func TestMain(m *testing.M) {
-	os.Exit(mongotesting.RunWithMongoInDocker(m, &mongoURI)) // 确保测试每次在新的docker环境中运行
+	os.Exit(mongotesting.RunWithMongoInDocker(m)) // 确保测试每次在新的docker环境中运行
 }

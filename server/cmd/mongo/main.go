@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	mgo "coolcar/server/share/mongo"
+	mgutil "coolcar/server/share/mongo"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -41,7 +41,7 @@ func findRows(c context.Context, col *mongo.Collection) {
 	}
 	for cur.Next(c) {
 		var row struct {
-			mgo.ObjID
+			mgutil.ObjID
 			OpenID string `bson:"open_id"`
 		}
 		err := cur.Decode(&row)

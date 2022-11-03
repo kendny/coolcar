@@ -2,7 +2,9 @@ package dao
 
 import (
 	"context"
-	mgo "coolcar/server/share/mongo"
+	"coolcar/server/share/id"
+	mgutil "coolcar/server/share/mongo"
+	"coolcar/server/share/mongo/objid"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,14 +29,14 @@ func NewMongo(db *mongo.Database) *Mongo {
 }
 
 // ResolveAccountID resolves an account id from open id
-func (m *Mongo) ResolveAccountID(c context.Context, openID string) (string, error) {
+func (m *Mongo) ResolveAccountID(c context.Context, openID string) (id.AccountID, error) {
 
-	insertedID := m.newObjID()
+	insertedID := mgutil.NewObjID() // m.newObjID()
 	res := m.col.FindOneAndUpdate(c, bson.M{
 		openIDField: openID,
-	}, mgo.SetOnInsert(bson.M{
-		mgo.IDField: insertedID,
-		openIDField: openID,
+	}, mgutil.SetOnInsert(bson.M{
+		mgutil.IDFieldName: insertedID,
+		openIDField:        openID,
 	}), options.FindOneAndUpdate().
 		SetUpsert(true).
 		SetReturnDocument(options.After))
@@ -43,13 +45,12 @@ func (m *Mongo) ResolveAccountID(c context.Context, openID string) (string, erro
 		return "", fmt.Errorf("cannot findOneAndUpdate: %v\n", err)
 	}
 
-	var row mgo.ObjID
+	var row mgutil.ObjID
 
 	err := res.Decode(&row)
 	if err != nil {
 		return "", fmt.Errorf("cannot decode result: %v\n", err)
 	}
 
-	return row.ID.Hex(), nil
-	//return objid.ToAccountID(row.ID), nil
+	return objid.ToAccountID(row.ID), nil
 }
