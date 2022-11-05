@@ -3,7 +3,6 @@ package trip
 import (
 	"context"
 	rentalpb "coolcar/server/rental/api/gen/v1"
-	trippb "coolcar/server/rental/api/gen/v1"
 	"coolcar/server/rental/trip/dao"
 	"coolcar/server/share/auth"
 	"coolcar/server/share/id"
@@ -16,12 +15,30 @@ import (
 //所有实现必须嵌入UnimplementedTripServiceServer
 //向前兼容
 type Service struct {
-	POIManager                            POIManager
-	Mongo                                 *dao.Mongo
-	Logger                                *zap.Logger
-	trippb.UnimplementedTripServiceServer // 必须引用，不然报错
+	POIManager     POIManager
+	ProfileManager ProfileManager
+	CarManager     CarManager
+	Mongo          *dao.Mongo
+	Logger         *zap.Logger
+	//trippb.UnimplementedTripServiceServer // 必须引用，不然报错
 }
 
+// ProfileManager 防止入侵层
+// ProfileManager defines the ACL (Anti Corruption Layer)
+// for profile verification logic
+type ProfileManager interface {
+	// Verify 验证有没有租车的资质
+	Verify(context.Context, id.AccountID) (id.IdentityID, error)
+}
+
+type CarManager interface {
+	//Verify 验证车是否可以租用, *rentalpb.Location 确定人车的位置
+	Verify(context.Context, id.CardID, *rentalpb.Location) error
+	//Unlock 开锁
+	Unlock(context.Context, id.CardID) error
+}
+
+// POIManager 查询坐标的能力
 // POIManager resolves POI(Point Of Interest).
 type POIManager interface {
 	Resolve(context.Context, *rentalpb.Location) (string, error)
@@ -29,7 +46,60 @@ type POIManager interface {
 
 // CreateTrip creates a trip
 func (s *Service) CreateTrip(c context.Context, req *rentalpb.CreateTripRequest) (*rentalpb.TripEntity, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+	// 获取用户身份
+	aid, err := auth.AccountIDFromContext(c)
+	if err != nil {
+		return nil, err
+	}
+	// 1. 验证驾驶者身份
+	iID, err := s.ProfileManager.Verify(c, aid)
+	if err != nil {
+		return nil, status.Error(codes.FailedPrecondition, err.Error())
+	}
+	// 2. 检查车辆状态
+	carID := id.CardID(req.CarId)
+	err = s.CarManager.Verify(c, carID, req.Start)
+	if err != nil {
+		return nil, status.Error(codes.FailedPrecondition, err.Error())
+	}
+
+	poi, err := s.POIManager.Resolve(c, req.Start)
+	if err != nil {
+		s.Logger.Info("cannot resolve poi", zap.Stringer("location", req.Start), zap.Error(err))
+	}
+
+	// 3. 创建行程：写入数据库，开始计费 (保证用户开锁后有行程)
+	ls := &rentalpb.LocationStatus{
+		Location: req.Start,
+		PoiName:  poi,
+	}
+	tr, err := s.Mongo.CreateTrip(c, &rentalpb.Trip{
+		AccountId:  aid.String(),
+		CarId:      carID.String(),
+		IdentityId: iID.String(),
+		Status:     rentalpb.TripStatus_IN_PROGRESS,
+		Start:      ls,
+		Current:    ls,
+	})
+	// 创建行程失败
+	if err != nil {
+		s.Logger.Warn("cannot create trip", zap.Error(err))
+		return nil, status.Error(codes.AlreadyExists, "")
+	}
+
+	// 4. 车辆开锁（无法开锁，需要有补救措施, 开锁是个复杂的过程，需要在后台进行开锁）
+	go func() {
+		err := s.CarManager.Unlock(context.Background(), carID)
+		if err != nil {
+			s.Logger.Error("cannot unlock car", zap.Error(err))
+		}
+	}()
+
+	// 返回行程
+	return &rentalpb.TripEntity{
+		Id:   tr.ID.Hex(),
+		Trip: tr.Trip,
+	}, nil
 }
 
 // GetTrip gets a trip
@@ -38,7 +108,7 @@ func (s *Service) GetTrip(c context.Context, req *rentalpb.GetTripRequest) (*ren
 }
 
 // GetTrips get trips
-func (s *Service) GetTrips(c context.Context, req *rentalpb.GetTripsRequest) (*rentalpb.GetTripsRequest, error) {
+func (s *Service) GetTrips(c context.Context, req *rentalpb.GetTripsRequest) (*rentalpb.GetTripsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 

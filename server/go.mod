@@ -9,6 +9,7 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.8
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.3
 	github.com/medivhzhan/weapp/v2 v2.5.0

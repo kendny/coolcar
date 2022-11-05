@@ -116,3 +116,18 @@ db.trip.createIndex({
   }
 })
 ```
+
+
+### {"code":12,"message":"unknown service rental.v1.TripService"}
+在gateway上服务没有注册成功
+```shell
+	for _, s := range serverConfig {
+		err := s.registerFunc(c,
+			mux, // mux:multiplexer
+			"localhost:8081",
+			[]grpc.DialOption{grpc.WithInsecure()})
+		if err != nil {
+			lg.Sugar().Fatalf("cannot register service %s:%v\n", s.name, s.addr)
+		}
+	}
+```

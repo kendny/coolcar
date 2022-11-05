@@ -42,12 +42,12 @@ func main() {
 	}{
 		{
 			name:         "auth",
-			addr:         "127.0.0:8081",
+			addr:         "localhost:8081",
 			registerFunc: authpb.RegisterAuthServiceHandlerFromEndpoint,
 		},
 		{
 			name:         "rental",
-			addr:         "127.0.0:8082",
+			addr:         "localhost:8082",
 			registerFunc: rentalpb.RegisterTripServiceHandlerFromEndpoint,
 		},
 	}
@@ -55,7 +55,7 @@ func main() {
 	for _, s := range serverConfig {
 		err := s.registerFunc(c,
 			mux, // mux:multiplexer
-			"localhost:8081",
+			s.addr,
 			[]grpc.DialOption{grpc.WithInsecure()})
 		if err != nil {
 			lg.Sugar().Fatalf("cannot register service %s:%v\n", s.name, s.addr)

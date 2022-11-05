@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type TripServiceClient interface {
 	CreateTrip(ctx context.Context, in *CreateTripRequest, opts ...grpc.CallOption) (*TripEntity, error)
 	GetTrip(ctx context.Context, in *GetTripRequest, opts ...grpc.CallOption) (*Trip, error)
-	GetTrips(ctx context.Context, in *GetTripsRequest, opts ...grpc.CallOption) (*GetTripResponse, error)
+	GetTrips(ctx context.Context, in *GetTripsRequest, opts ...grpc.CallOption) (*GetTripsResponse, error)
 	UpdateTrip(ctx context.Context, in *UpdateTripRequest, opts ...grpc.CallOption) (*Trip, error)
 }
 
@@ -54,8 +54,8 @@ func (c *tripServiceClient) GetTrip(ctx context.Context, in *GetTripRequest, opt
 	return out, nil
 }
 
-func (c *tripServiceClient) GetTrips(ctx context.Context, in *GetTripsRequest, opts ...grpc.CallOption) (*GetTripResponse, error) {
-	out := new(GetTripResponse)
+func (c *tripServiceClient) GetTrips(ctx context.Context, in *GetTripsRequest, opts ...grpc.CallOption) (*GetTripsResponse, error) {
+	out := new(GetTripsResponse)
 	err := c.cc.Invoke(ctx, "/rental.v1.TripService/GetTrips", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -73,17 +73,16 @@ func (c *tripServiceClient) UpdateTrip(ctx context.Context, in *UpdateTripReques
 }
 
 // TripServiceServer is the server API for TripService service.
-// All implementations must embed UnimplementedTripServiceServer
+// All implementations should embed UnimplementedTripServiceServer
 // for forward compatibility
 type TripServiceServer interface {
 	CreateTrip(context.Context, *CreateTripRequest) (*TripEntity, error)
 	GetTrip(context.Context, *GetTripRequest) (*Trip, error)
-	GetTrips(context.Context, *GetTripsRequest) (*GetTripResponse, error)
+	GetTrips(context.Context, *GetTripsRequest) (*GetTripsResponse, error)
 	UpdateTrip(context.Context, *UpdateTripRequest) (*Trip, error)
-	mustEmbedUnimplementedTripServiceServer()
 }
 
-// UnimplementedTripServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedTripServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedTripServiceServer struct {
 }
 
@@ -93,13 +92,12 @@ func (UnimplementedTripServiceServer) CreateTrip(context.Context, *CreateTripReq
 func (UnimplementedTripServiceServer) GetTrip(context.Context, *GetTripRequest) (*Trip, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTrip not implemented")
 }
-func (UnimplementedTripServiceServer) GetTrips(context.Context, *GetTripsRequest) (*GetTripResponse, error) {
+func (UnimplementedTripServiceServer) GetTrips(context.Context, *GetTripsRequest) (*GetTripsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTrips not implemented")
 }
 func (UnimplementedTripServiceServer) UpdateTrip(context.Context, *UpdateTripRequest) (*Trip, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTrip not implemented")
 }
-func (UnimplementedTripServiceServer) mustEmbedUnimplementedTripServiceServer() {}
 
 // UnsafeTripServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to TripServiceServer will

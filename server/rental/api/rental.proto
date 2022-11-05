@@ -40,6 +40,7 @@ message Trip {
   // 终点
   LocationStatus end = 5;
   TripStatus status = 6;
+  string identity_id = 7;
 }
 
 message CreateTripRequest{
@@ -54,7 +55,8 @@ message GetTripRequest {
 message GetTripsRequest {
   TripStatus status = 1;
 }
-message GetTripResponse {
+
+message GetTripsResponse {
   repeated TripEntity trips = 1;
 }
 
@@ -67,6 +69,6 @@ message UpdateTripRequest {
 service TripService {
   rpc CreateTrip(CreateTripRequest) returns (TripEntity);
   rpc GetTrip(GetTripRequest) returns (Trip);
-  rpc GetTrips (GetTripsRequest) returns (GetTripResponse);
+  rpc GetTrips (GetTripsRequest) returns (GetTripsResponse);
   rpc UpdateTrip (UpdateTripRequest) returns (Trip);
 }
