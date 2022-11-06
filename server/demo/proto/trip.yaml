@@ -1,7 +1,0 @@
-type: google.api.Service
-config_version: 3
-
-http:
-  rules:
-  - selector: coolcar.TripService.GetTrip # 对应的服务
-    get: /trip/{id} # 暴露的REST风格接口

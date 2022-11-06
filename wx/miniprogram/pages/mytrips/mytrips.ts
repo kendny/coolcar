@@ -1,11 +1,5 @@
-interface Trip {
-    id: string
-    start: string
-    end: string
-    duration: string
-    fee: string
-    distance: string
-}
+import {TripService} from "../../service/trip";
+
 
 Page({    data: {
         promotionItems: [
@@ -31,8 +25,11 @@ Page({    data: {
     /**
      * 生命周期函数--监听页面加载
      */
-    onLoad() {
-
+    async onLoad() {
+        // 获取所有行程
+        //rental.v1.TripStatus.FINISHED
+        const res = await TripService.GetTrips().then(console.log)
+        console.log(res)
     },
 
 })

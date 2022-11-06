@@ -6,6 +6,7 @@ import (
 	"coolcar/server/rental/trip/dao"
 	"coolcar/server/share/auth"
 	"coolcar/server/share/id"
+	"fmt"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -48,6 +49,8 @@ type POIManager interface {
 func (s *Service) CreateTrip(c context.Context, req *rentalpb.CreateTripRequest) (*rentalpb.TripEntity, error) {
 	// 获取用户身份
 	aid, err := auth.AccountIDFromContext(c)
+	s.Logger.Info("CreateTrip,", zap.String("aid:", aid.String()))
+
 	if err != nil {
 		return nil, err
 	}
@@ -104,12 +107,41 @@ func (s *Service) CreateTrip(c context.Context, req *rentalpb.CreateTripRequest)
 
 // GetTrip gets a trip
 func (s *Service) GetTrip(c context.Context, req *rentalpb.GetTripRequest) (*rentalpb.Trip, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+	// 获取用户身份
+	aid, err := auth.AccountIDFromContext(c)
+	s.Logger.Info("GetTrip,", zap.String("aid:", aid.String()))
+	if err != nil {
+		return nil, err
+	}
+	tr, err := s.Mongo.GetTrip(c, id.TripID(req.Id), aid)
+
+	if err != nil {
+		fmt.Errorf("cannot get trip: %s\n", err)
+		s.Logger.Error("cannot get trip:", zap.Error(err))
+		return nil, status.Error(codes.NotFound, err.Error())
+	}
+	return tr.Trip, nil
 }
 
 // GetTrips get trips
 func (s *Service) GetTrips(c context.Context, req *rentalpb.GetTripsRequest) (*rentalpb.GetTripsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+	aid, err := auth.AccountIDFromContext(c)
+	if err != nil {
+		return nil, err
+	}
+	trips, err := s.Mongo.GetTrips(c, aid, req.Status)
+	if err != nil {
+		s.Logger.Error("cannot get trips", zap.Error(err))
+		return nil, status.Error(codes.Internal, "")
+	}
+	res := &rentalpb.GetTripsResponse{}
+	for _, tr := range trips {
+		res.Trips = append(res.Trips, &rentalpb.TripEntity{
+			Id:   tr.ID.Hex(),
+			Trip: tr.Trip,
+		})
+	}
+	return res, nil
 }
 
 // UpdateTrips updates a trip.

@@ -15,7 +15,7 @@ export namespace CoolCar {
     interface RequestOption<REQ, RES> {
         method: "GET" | "PUT" | "POST" | "DELETE"
         path: string
-        data: REQ
+        data?: REQ // ? data可选项
         respMarshaller: (r: object) => RES
     }
 
@@ -92,6 +92,8 @@ export namespace CoolCar {
             wx.request({
                 url: serverAddr + o.path,
                 method: o.method,
+                // @ts-ignore
+                // todo...?
                 data: o.data,
                 header,
                 success: res => {

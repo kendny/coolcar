@@ -1,4 +1,6 @@
 import { formatDuration, formatFee } from '../../utils/format';
+import {routing} from "../../utils/routings";
+import {TripService} from "../../service/trip";
 // pages/driving/driving.ts
 
 const centPerSec = 0.4
@@ -59,31 +61,17 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad() {
+  onLoad(opt:Record<'trip_id', string>) {
+    const o:routing.DrivingOpts = opt
+    console.log('current trip', o.trip_id)
+    // 测试
+    // o.trip_id = "6367337282552b4c59693089"
+    TripService.GetTrip(o.trip_id).then(console.log)
+    // 获取行程
     this.setupLocationUpdator()
     this.setupTimer()
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
 
   /**
    * 生命周期函数--监听页面卸载
@@ -102,20 +90,5 @@ Page({
   onPullDownRefresh() {
 
   },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
-  },
-
   
 })
