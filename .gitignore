@@ -3,6 +3,7 @@
 *.out
 .vscode
 .DS_Store
+.idea
 
 **/wx/miniprogram/**/*.js
 # 这个JS需要

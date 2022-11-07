@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	rentalpb "coolcar/server/rental/api/gen/v1"
+	"coolcar/server/rental/profile"
+	profiledao "coolcar/server/rental/profile/dao"
 	"coolcar/server/rental/trip"
 	"coolcar/server/rental/trip/client/car"
 	"coolcar/server/rental/trip/client/poi"
-	"coolcar/server/rental/trip/client/profile"
-	"coolcar/server/rental/trip/dao"
+	profClient "coolcar/server/rental/trip/client/profile"
+	tripdao "coolcar/server/rental/trip/dao"
 	"coolcar/server/share/server"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -32,6 +34,7 @@ func main() {
 		logger.Fatal("cannot connect mongodb", zap.Error(err))
 	}
 
+	db := mongoClient.Database("coolcar")
 	// logger.Sugar() 带语法糖的logger
 	logger.Sugar().Fatal(server.RunGRPCServer(&server.GRPCConfig{
 		Name:              "rental",
@@ -41,10 +44,14 @@ func main() {
 		RegisterFunc: func(s *grpc.Server) {
 			rentalpb.RegisterTripServiceServer(s, &trip.Service{
 				CarManager:     &car.Manager{},
-				ProfileManager: &profile.Manager{},
+				ProfileManager: &profClient.Manager{},
 				POIManager:     &poi.Manager{},
-				Mongo:          dao.NewMongo(mongoClient.Database("coolcar")),
+				Mongo:          tripdao.NewMongo(db),
 				Logger:         logger,
+			})
+			rentalpb.RegisterProfileServiceServer(s, &profile.Service{
+				Mongo:  profiledao.NewMongo(db),
+				Logger: logger,
 			})
 		},
 	}))

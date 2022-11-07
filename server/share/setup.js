@@ -15,3 +15,10 @@ db.trip.createIndex({
         "trip.status": 1, // 指的是值为1
     }
 })
+
+// 设置唯一性
+db.profile.createIndex({
+    "accountid": 1,
+}, {
+    unique: true
+})
