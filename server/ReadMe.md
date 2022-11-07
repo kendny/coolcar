@@ -131,3 +131,7 @@ db.trip.createIndex({
 		}
 	}
 ```
+
+### docker 启动mongo 跑测试失败
+需要查看docker mongo 测试启动日志，可能是空间不足导致
+[docker清理缓存](https://blog.csdn.net/m0_67390963/article/details/126327604)
