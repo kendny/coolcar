@@ -2,6 +2,16 @@ export function padString(n: number) {
     return n < 10 ? '0'+n.toFixed(0) : n.toFixed(0)
 }
 
+
+export function formatData(millis:number) {
+    const dt = new Date(millis)
+    const y = dt.getFullYear()
+    const m = dt.getMonth() + 1
+    const d = dt.getDate()
+    return `${padString(y)}-${padString(m)}-${padString(d)}`
+}
+
+
 export function formatDuration(sec: number) {
     const h = Math.floor(sec/3600)
     sec -= 3600 * h

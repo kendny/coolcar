@@ -8,12 +8,18 @@
  */
 // pages/register/register.ts
 import {routing} from "../../utils/routings";
+import {rental} from "../../service/proto_gen/rental/rental_pb";
+import {formatData} from "../../utils/format";
+import {ProfileService} from "../../service/profile";
 
 Page({
 
   /**
    * 页面的初始数据
    */
+  rediretURL:'',
+  profileRefresher:0,
+
   data: {
     licNo: '',
     name: '',
@@ -21,7 +27,18 @@ Page({
     genderIndex: 0,
     genders: ['未知', '男', '女', '其他'],
     licImgURL: '',
-    state: 'UNSUBMITTED' as 'UNSUBMITTED' |  'PENDING' | 'VERIFIED' ,
+    state:  rental.v1.IdentityStatus[rental.v1.IdentityStatus.UNSUBMITTED] ,
+  },
+
+  // 渲染profile
+  renderProfile: function (p: rental.v1.IProfile) {
+    this.setData({
+      licNo: p.identity?.licNumber || "",
+      name: p.identity?.name || "",
+      genderIndex: p.identity?.gender || 0,
+      birthDate: formatData(p.identity?.birthDateMillis || 0),
+      state: rental.v1.IdentityStatus[p.identityStatus || 0],
+    })
   },
 
   /**
@@ -29,6 +46,10 @@ Page({
    */
   onLoad(opt:Record<'redirect', string>) {
     const o:routing.RegisterOpts = opt
+    if(o.redirect) {
+      this.rediretURL = decodeURIComponent(o.redirect)
+    }
+    ProfileService.getProfile().then(p => this.renderProfile(p))
     console.log(o, o.redirect)
   },
 
@@ -64,7 +85,7 @@ Page({
   onGenderChange(e:any) {
     console.log("onGenderChange:==", e)
     this.setData({
-      genderIndex: e.detail.value,
+      genderIndex: parseInt(e.detail.value),
     })
   },
 
@@ -75,34 +96,59 @@ Page({
     })
   },
 
-  onSubmit(){
-    // TODO: submit the form to server
+  // 清除掉轮询
+  clearProfileRefresher() {
+    if(this.profileRefresher) {
+      clearInterval(this.profileRefresher)
+      this.profileRefresher = 0
+    }
+  },
+  onLicVerified() {
     this.setData({
-      state: 'PENDING'
+      state: rental.v1.IdentityStatus[rental.v1.IdentityStatus.VERIFIED]
     })
-    // 模拟审核
-    setTimeout(() => {
-      this.onLicVerified()
-    }, 3000)
+    if(this.rediretURL) {
+      wx.redirectTo({
+        url: this.rediretURL,
+      })
+    }
+  },
+
+  scheduleProfileRefresher(){
+    // 轮询获取profile更新 状态
+    let i = 0;
+    this.profileRefresher = setInterval(() => {
+      console.log("profileRefresher:=", ++i)
+      ProfileService.getProfile().then(p => {
+        this.renderProfile(p)
+        if(p.identityStatus != rental.v1.IdentityStatus.PENDING) {
+          this.clearProfileRefresher()
+        }
+        if(p.identityStatus == rental.v1.IdentityStatus.VERIFIED) {
+          this.onLicVerified()
+        }
+
+      })
+    }, 1000)
+  },
+  onSubmit(){
+    ProfileService.submitProfile({
+      licNumber: this.data.licNo,
+      name: this.data.name,
+      gender: this.data.genderIndex,
+      birthDateMillis: Date.parse(this.data.birthDate)
+    }).then(p => {
+      this.renderProfile(p)
+      this.scheduleProfileRefresher()
+    })
   },
 
   onResubmit() {
-    this.setData({
-      state: 'UNSUBMITTED',
-      licImgURL: ''
-    })
+    // 重新提交
+    ProfileService.clearProfile().then(p => this.renderProfile(p))
   },
-
-  onLicVerified(){
-    // 模拟审核
-    this.setData({
-      state: 'VERIFIED'
-    })
-
-    // 审核通过，跳转到开锁页面
-    wx.navigateTo({
-      url: '/pages/lock/lock'
-    })
-  },
+  onUnload(): void | Promise<void> {
+    this.clearProfileRefresher()
+  }
 
 })
