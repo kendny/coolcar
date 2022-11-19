@@ -14,6 +14,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.3
 	github.com/medivhzhan/weapp/v2 v2.5.0
 	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.39
 	go.mongodb.org/mongo-driver v1.10.3
 	go.uber.org/zap v1.16.0
 	google.golang.org/grpc v1.46.2

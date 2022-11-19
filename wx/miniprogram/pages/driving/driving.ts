@@ -63,11 +63,7 @@ Page({
    */
   onLoad(opt:Record<'trip_id', string>) {
     const o:routing.DrivingOpts = opt
-    console.log('current trip', o.trip_id)
-    // 测试
-    // o.trip_id = "6367337282552b4c59693089"
-    TripService.GetTrip(o.trip_id).then(console.log)
-    // 获取行程
+    this.tripID = o.trip_id
     this.setupLocationUpdator()
     this.setupTimer()
   },
@@ -84,11 +80,18 @@ Page({
     }
   },
 
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
+  onEndTripTap(){
+    TripService.FinishTrip(this.tripID).then(() => {
+      wx.redirectTo({
+        url: routing.mytrips()
+      })
+    }).catch(err => {
+      console.error(err)
+      wx.showToast({
+        title: '结束行程失败',
+        icon: 'none',
+      })
+    })
+  }
   
 })

@@ -24,6 +24,7 @@ func (s *Service) GetProfile(c context.Context, req *rentalpb.GetProfileRequest)
 	if err != nil {
 		return nil, err
 	}
+	s.Logger.Info("GetProfie aid:", zap.String("aid:", aid.String()))
 	p, err := s.Mongo.GetProfile(c, aid)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {

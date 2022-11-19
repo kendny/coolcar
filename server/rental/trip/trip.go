@@ -25,8 +25,7 @@ type Service struct {
 	//trippb.UnimplementedTripServiceServer // 必须引用，不然报错
 }
 
-// ProfileManager 防止入侵层
-// ProfileManager defines the ACL (Anti Corruption Layer)
+// ProfileManager defines the ACL (Anti Corruption Layer, 防止入侵层)
 // for profile verification logic
 type ProfileManager interface {
 	// Verify 验证有没有租车的资质

@@ -27,4 +27,31 @@ export namespace TripService {
             respMarshaller: rental.v1.GetTripsResponse.fromObject
         })
     }
+
+    export function UpdateTripPos(id:string, loc?:rental.v1.ILocation) {
+        return updateTrip({
+            id,
+            current: loc
+        })
+    }
+
+    export function FinishTrip(id:string) {
+        return updateTrip({
+            id,
+            endTrip: true
+        })
+    }
+
+
+    function updateTrip(r:rental.v1.IUpdateTripRequest): Promise<rental.v1.ITrip> {
+        if(!r.id) {
+            return Promise.reject("must specify id")
+        }
+        return CoolCar.SendRequestWithAuthRetry({
+            method: "PUT",
+            path: `/v1/trip/${encodeURIComponent(r.id)}`,
+            data: r,
+            respMarshaller: rental.v1.Trip.fromObject
+        })
+    }
 }

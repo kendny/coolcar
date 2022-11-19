@@ -36,6 +36,10 @@ func main() {
 
 	db := mongoClient.Database("coolcar")
 	// logger.Sugar() 带语法糖的logger
+	profService := &profile.Service{
+		Mongo:  profiledao.NewMongo(db),
+		Logger: logger,
+	}
 	logger.Sugar().Fatal(server.RunGRPCServer(&server.GRPCConfig{
 		Name:              "rental",
 		Addr:              ":8082",
@@ -43,16 +47,15 @@ func main() {
 		Logger:            logger,
 		RegisterFunc: func(s *grpc.Server) {
 			rentalpb.RegisterTripServiceServer(s, &trip.Service{
-				CarManager:     &car.Manager{},
-				ProfileManager: &profClient.Manager{},
-				POIManager:     &poi.Manager{},
-				Mongo:          tripdao.NewMongo(db),
-				Logger:         logger,
+				CarManager: &car.Manager{},
+				ProfileManager: &profClient.Manager{
+					Fetcher: profService,
+				},
+				POIManager: &poi.Manager{},
+				Mongo:      tripdao.NewMongo(db),
+				Logger:     logger,
 			})
-			rentalpb.RegisterProfileServiceServer(s, &profile.Service{
-				Mongo:  profiledao.NewMongo(db),
-				Logger: logger,
-			})
+			rentalpb.RegisterProfileServiceServer(s, profService)
 		},
 	}))
 }

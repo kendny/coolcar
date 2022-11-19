@@ -67,16 +67,26 @@ Page({
             licImgURL: res.tempFilePaths[0]
           })
 
+          const data = wx.getFileSystemManager().readFileSync(res.tempFilePaths[0])
+          wx.request({
+            method: "PUT",
+            url: "https://wuhan-1259722894.cos.ap-shanghai.myqcloud.com/1.png?q-sign-algorithm=sha1&q-ak=AKIDbkfNr78vUq32pOhoiQxHMDpDPPESeicR&q-sign-time=1668840558%3B1668840858&q-key-time=1668840558%3B1668840858&q-header-list=host&q-url-param-list=&q-signature=153ed1de1a7fddd57394de57eb0fabad0d88d2fd",
+            data,
+            success: console.log,
+            fail: console.error,
+          })
+
           // todo... upload image
-          setTimeout(() => {
-            this.setData({
-              licNo: "1213232",
-              name: "kendny",
-              genderIndex: 1,
-              birthDate: "2017-01-01",
-              state: 'UNSUBMITTED'
-            })
-          }, 1000)
+          // 此处 wx.uploadFile 上传文件有坑点
+          // setTimeout(() => {
+          //   this.setData({
+          //     licNo: "1213232",
+          //     name: "kendny",
+          //     genderIndex: 1,
+          //     birthDate: "2017-01-01",
+          //     state: 'UNSUBMITTED'
+          //   })
+          // }, 1000)
         }
       }
     })
