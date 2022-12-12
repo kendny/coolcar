@@ -177,9 +177,62 @@ rentalpb.RegisterTripServiceServer(s, &trip.Service{
 ```
 
 ### 微信小程序坑点之一
+
 小程序上传接口
+
 ```shell
 wx.uploaldFile()
 ```
+
 > 中的method是小写的post，导致其连自身的对象存储服务都不能很好的对接，需要使用wx.request进行文件的上传
 
+### imports coolcar/server/blob/api/gen/v1: import cycle not allowed
+
+```shell
+可能导致的原因，go_package包声明路径不对
+```
+
+### panic: grpc: no transport security set (use grpc.WithTransportCredentials(insecure.NewCredentials()) explicitly or set credentials)
+
+```shell
+	conn, err := grpc.Dial("localhost:8083")
+```
+
+改成
+
+```shell
+	conn, err := grpc.Dial("localhost:8083", grpc.WithInsecure())
+#	或
+    conn, err := grpc.Dial("localhost:8083", grpc.WithTransportCredentials(insecure.NewCredentials()))
+```
+
+#### Mongo 更新语句
+
+> 存在更新，不存在插入
+
+```JS
+db.profile.update({
+    accountid: "xxxx",
+    "$or": [
+        {
+            "profile.identitystatus": 0,
+        }, {
+            "profile.identitystatus": {
+                "$exists": false,
+            },
+        },
+    ],
+}, {
+    "$set": {
+        accountid: 'xxxx',
+        profile: {
+            identity: {
+                name: "abc",
+            },
+            identitystatus: 1
+        }
+    }
+}, {
+    upsert: true
+})
+```

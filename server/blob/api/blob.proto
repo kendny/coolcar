@@ -1,6 +1,6 @@
 syntax = "proto3";
 package blob.v1;
-option go_package = "cooclar/rental/api/gen/v1;blobpb";
+option go_package = "cooclar/blob/api/gen/v1;blobpb";
 
 message CreateBlobRequest {
   string account_id = 1;

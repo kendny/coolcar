@@ -2,32 +2,23 @@ package profile
 
 import (
 	"context"
+	blobpb "coolcar/server/blob/api/gen/v1"
 	rentalpb "coolcar/server/rental/api/gen/v1"
 	"coolcar/server/rental/profile/dao"
 	"coolcar/server/share/auth"
 	"coolcar/server/share/id"
 	"coolcar/server/share/server"
 	mongotesting "coolcar/server/share/testing"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"os"
 	"testing"
 )
 
 func TestProfileLifecyle(t *testing.T) {
 	c := context.Background()
-	mc, err := mongotesting.NewClient(c)
-	if err != nil {
-		t.Fatalf("cannot create new mongo client: %v", err)
-	}
-	db := mc.Database("coolcar")
-	mongotesting.SetupIndexes(c, db)
-	logger, err := server.NewZapLogger()
-	if err != nil {
-		t.Fatalf("cannot create logger: %v", err)
-	}
-	s := Service{
-		Mongo:  dao.NewMongo(db),
-		Logger: logger,
-	}
+	s := newService(c, t)
 	aid := id.AccountID("account1")
 	c = auth.ContextWithAccountID(c, aid)
 	cases := []struct {
@@ -109,6 +100,124 @@ func TestProfileLifecyle(t *testing.T) {
 			t.Errorf("%s: status field incorrect: want %s, got %s", cc.name, cc.wantStatus, p.IdentityStatus)
 		}
 	}
+}
+
+func TestProfilePhotoLifecycle(t *testing.T) {
+	//c := context.Background()
+	// 进行登陆认证
+	c := auth.ContextWithAccountID(context.Background(), id.AccountID("account1"))
+	s := newService(c, t)
+	s.BlobClient = &blobClient{
+		idForCreate: "blob1",
+	}
+
+	getPhotoOp := func() (string, error) {
+		r, err := s.GetProfilePhoto(c, &rentalpb.GetProfilePhotoRequest{})
+		if err != nil {
+			return "", err
+		}
+		return r.Url, nil
+	}
+	cases := []struct {
+		name        string
+		op          func() (string, error)
+		wantURL     string
+		wantErrCode codes.Code
+	}{
+		{
+			name:        "get_photo_before_upload",
+			op:          getPhotoOp,
+			wantErrCode: codes.NotFound,
+		}, {
+			name: "create_photo",
+			op: func() (string, error) {
+				r, err := s.CreateProfilePhoto(c, &rentalpb.CreateProfilePhotoRequest{})
+				if err != nil {
+					return "", nil
+				}
+				return r.UploadUrl, nil
+			},
+			wantURL: "upload_url for blob1",
+		}, {
+			name: "complete_photo_upload",
+			op: func() (string, error) {
+				_, err := s.CompleteProfilePhoto(c, &rentalpb.CompleteProfilePhotoRequest{})
+				return "", err
+			},
+		}, {
+			name:    "get_photo_url",
+			op:      getPhotoOp,
+			wantURL: "get_url for blob1",
+		}, {
+			name: "clear_photo",
+			op: func() (string, error) {
+				_, err := s.ClearProfilePhoto(c, &rentalpb.ClearProfilePhotoRequest{})
+				return "", err
+			},
+		}, {
+			name:        "get_photo_after_clear",
+			op:          getPhotoOp,
+			wantErrCode: codes.NotFound,
+		},
+	}
+
+	for _, cc := range cases {
+		got, err := cc.op()
+		code := codes.OK
+		if err != nil {
+			if s, ok := status.FromError(err); ok {
+				code = s.Code()
+			} else {
+				t.Errorf("%s: operation failed: %v\n", cc.name, err)
+			}
+		}
+		if code != cc.wantErrCode {
+			t.Errorf("%s: wrong error code: want %d, got %d\n", cc.name, cc.wantErrCode, code)
+		}
+		if got != cc.wantURL {
+			t.Errorf("%s: wrong url: want %q, got: %q\n", cc.name, cc.wantURL, got)
+		}
+
+	}
+
+}
+
+func newService(c context.Context, t *testing.T) *Service {
+	mc, err := mongotesting.NewClient(c)
+	if err != nil {
+		t.Fatalf("cannot create new mongo client: %v\n", err)
+	}
+	db := mc.Database("trip")
+	mongotesting.SetupIndexes(c, db)
+	logger, err := server.NewZapLogger()
+	if err != nil {
+		t.Fatalf("cannot create logger: %v", err)
+	}
+	return &Service{
+		Mongo:  dao.NewMongo(db),
+		Logger: logger,
+	}
+}
+
+type blobClient struct {
+	idForCreate string
+}
+
+func (b *blobClient) CreateBlob(ctx context.Context, in *blobpb.CreateBlobRequest, opts ...grpc.CallOption) (*blobpb.CreateBlobResponse, error) {
+	return &blobpb.CreateBlobResponse{
+		Id:        b.idForCreate,
+		UploadUrl: "upload_url for " + b.idForCreate,
+	}, nil
+}
+
+func (b *blobClient) GetBlob(ctx context.Context, in *blobpb.GetBlobRequest, opts ...grpc.CallOption) (*blobpb.GetBlobResponse, error) {
+	return &blobpb.GetBlobResponse{}, nil
+}
+
+func (b *blobClient) GetBlobURL(ctx context.Context, in *blobpb.GetBlobURLRequest, opts ...grpc.CallOption) (*blobpb.GetBlobURLResponse, error) {
+	return &blobpb.GetBlobURLResponse{
+		Url: "get_url for " + in.Id,
+	}, nil
 }
 
 func TestMain(m *testing.M) {

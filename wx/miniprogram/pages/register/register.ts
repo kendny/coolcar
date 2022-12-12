@@ -70,7 +70,7 @@ Page({
           const data = wx.getFileSystemManager().readFileSync(res.tempFilePaths[0])
           wx.request({
             method: "PUT",
-            url: "https://wuhan-1259722894.cos.ap-shanghai.myqcloud.com/1.png?q-sign-algorithm=sha1&q-ak=AKIDbkfNr78vUq32pOhoiQxHMDpDPPESeicR&q-sign-time=1668840558%3B1668840858&q-key-time=1668840558%3B1668840858&q-header-list=host&q-url-param-list=&q-signature=153ed1de1a7fddd57394de57eb0fabad0d88d2fd",
+            url: "https://wuhan-1259722894.cos.ap-shanghai.myqcloud.com/account_2/639446f1ce6ee5f76eab5220?q-sign-algorithm=sha1&q-ak=AKIDbkfNr78vUq32pOhoiQxHMDpDPPESeicR&q-sign-time=1670661873%3B1670662873&q-key-time=1670661873%3B1670662873&q-header-list=host&q-url-param-list=&q-signature=bcd7f962d5130b9ad5fc6e8d32219f259f1b24ae",
             data,
             success: console.log,
             fail: console.error,

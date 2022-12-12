@@ -54,3 +54,20 @@ func SetOnInsert(v interface{}) bson.M {
 		"$setOnInsert": v,
 	}
 }
+
+// ZeroOrDoesNotExist generates a filter expression with
+// filed equal to zero or field does not exits
+func ZeroOrDoesNotExist(field string, zero interface{}) bson.M {
+	return bson.M{
+		"$or": []bson.M{
+			{
+				field: zero,
+			},
+			{
+				field: bson.M{
+					"$exists": false,
+				},
+			},
+		},
+	}
+}

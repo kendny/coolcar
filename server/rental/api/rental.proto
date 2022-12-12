@@ -105,8 +105,28 @@ message GetProfileRequest{} // 获取profile的请求，获取自己的不需要
 
 message ClearProfileRequest{}
 
+message GetProfilePhotoRequest{}
+message GetProfilePhotoResponse{
+  string url = 1;
+}
+
+message CreateProfilePhotoRequest{}
+message CreateProfilePhotoResponse{
+  string upload_url = 1;
+}
+
+message CompleteProfilePhotoRequest{}
+message ClearProfilePhotoRequest{}
+message ClearProfilePhotoResponse{}
+
 service ProfileService{
   rpc GetProfile(GetProfileRequest) returns (Profile);
   rpc SubmitProfile(Identity) returns (Profile);
   rpc ClearProfile(ClearProfileRequest) returns (Profile);
+
+  //获取驾照图片
+  rpc GetProfilePhoto(GetProfilePhotoRequest) returns (GetProfilePhotoResponse);
+  rpc CreateProfilePhoto(CreateProfilePhotoRequest) returns (CreateProfilePhotoResponse);
+  rpc CompleteProfilePhoto(CompleteProfilePhotoRequest) returns (Identity);
+  rpc ClearProfilePhoto(ClearProfilePhotoRequest) returns (ClearProfilePhotoResponse);
 }
