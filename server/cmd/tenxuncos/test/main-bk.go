@@ -18,8 +18,8 @@ func main() {
 		panic(err)
 	}
 	b := &cos.BaseURL{BucketURL: u}
-	sID := "AKIDbkfNr78vUq32pOhoiQxHMDpDPPESeicR"
-	sKey := "jHiz62oV8lK1Zv78yeEGE90hHl48zc1B"
+	sID := "xxx"
+	sKey := "xxx"
 	c := cos.NewClient(b, &http.Client{
 		Transport: &cos.AuthorizationTransport{
 			SecretID:  sID,  // 替换为用户的 SecretId，请登录访问管理控制台进行查看和管理，https://console.cloud.tencent.com/cam/capi
